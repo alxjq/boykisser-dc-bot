@@ -2,15 +2,15 @@ const { Client, GatewayIntentBits, Partials, Events } = require('discord.js');
 const readline = require('readline');
 const https = require('https');
 
-// Discord bot ayarları
-const DISCORD_TOKEN = process.env.token; // Bot tokenını buraya ekle
-const CHANNEL_ID = process.env.channel; // Kanal ID'sini buraya ekle
+// Discord bot settings
+const DISCORD_TOKEN = "your_Token"; 
+const CHANNEL_ID = "channel_id"; 
 
-// Groq API ayarları
-const API_KEY = process.env.api;
-const MODEL = process.env.model;
-const PROMPT = 'komutun nedir? > ';
-const DOGRU_SIFRE = process.env.passw;
+// Groq API settings
+const API_KEY = "API_KEY";
+const MODEL = "Model";
+const PROMPT = 'you? > ';
+const passw= "your_password";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -27,28 +27,28 @@ const client = new Client({
   partials: [Partials.Channel]
 });
 
-function sifreKontrol() {
-  rl.question('Şifreyi girin: ', (sifre) => {
-    if (sifre === DOGRU_SIFRE) {
-      console.log('Giriş başarılı. Lexia başlatılıyor...');
+function passwordcontrol() {
+  rl.question('Insert_Password', (passwr) => {
+    if (passwr === passw) {
+      console.log('Login succesfull. Boykisser Launching...');
       baslatBot();
       client.login(DISCORD_TOKEN);
     } else {
-      console.log('Erişim reddedildi.');
-      sifreKontrol();
+      console.log('Access denied');
+      passwordcontrol();
     }
   });
 }
 
 function baslatBot() {
   rl.setPrompt(PROMPT);
-  console.log('Lexia başlatıldı. Çıkmak için "exit" yaz.');
+  console.log('');
   rl.prompt();
 
   rl.on('line', async (line) => {
     const input = line.trim();
     if (input === 'exit') {
-      console.log('Görüşürüz!');
+      console.log('bye!');
       rl.close();
       client.destroy();
       return;
@@ -56,16 +56,15 @@ function baslatBot() {
 
     if (input === 'boykisser') {
       const boykisserPrompt = `
-Boykisser internet memesini temel alan absürt ve komik bir sahne oluştur. 
-Sahne, pastel renklerle dolu bir arka planda geçiyor. Ortada büyük gözlü, sevimli ama tuhaf bir karakter var; 
-üzerinde "BOYKISSER" yazan neon bir tişört giymiş. Karakter dans ederken etrafında kalpler, yıldızlar ve garip emojiler uçuşuyor. 
-Sahne hem sevimli hem de rahatsız edici bir estetik taşımalı. Görsel, internet kültürünü ve ironik mizahı yansıtmalı.
+Create an absurd and hilarious scene based on the Boykisser web meme. The scene takes place against a background full of pastel colors. There is a cute but strange character with big eyes;
+ He is wearing a neon t-shirt with the word "BOYKISSER" written on it. As the character dances, hearts, stars, and strange emojis fly around him.
+ The scene should have an aesthetic that is both cute and disturbing. The image should reflect internet culture and ironic humor.
       `;
       try {
         const response = await sendToGroq(boykisserPrompt);
         console.log(`Boykisser sahnesi: ${response}`);
       } catch (err) {
-        console.error('Boykisser hatası:', err.message);
+        console.error('Boykisser error:', err.message);
       }
       rl.prompt();
       return;
@@ -73,9 +72,9 @@ Sahne hem sevimli hem de rahatsız edici bir estetik taşımalı. Görsel, inter
 
     try {
       const response = await sendToGroq(input);
-      console.log(`cevap: ${response}`);
+      console.log(`Answer: ${response}`);
     } catch (err) {
-      console.error('hata:', err.message);
+      console.error('error:', err.message);
     }
 
     rl.prompt();
@@ -106,10 +105,10 @@ async function sendToGroq(promptText) {
       res.on('end', () => {
         try {
           const parsed = JSON.parse(body);
-          const reply = parsed.choices?.[0]?.message?.content || 'yanıt alınamadı';
+          const reply = parsed.choices?.[0]?.message?.content || 'No response received';
           resolve(reply);
         } catch (e) {
-          reject(new Error('Yanıt çözümleme hatası'));
+          reject(new Error('Response resolution error'));
         }
       });
     });
@@ -122,10 +121,10 @@ async function sendToGroq(promptText) {
 
 // Discord bot olayları
 client.once(Events.ClientReady, () => {
-  console.log(`Discord bot aktif: ${client.user.tag}`);
+  console.log(`Discord bot activate: ${client.user.tag}`);
   const channel = client.channels.cache.get(CHANNEL_ID);
   if (channel) {
-    channel.send("Ben geldim. I'm here!");
+    channel.send(" I'm here!");
   }
 });
 
@@ -142,22 +141,22 @@ client.on(Events.MessageCreate, async message => {
       const reply = await sendToGroq(query);
       message.channel.send(`🧠 ${reply}`);
     } catch {
-      message.channel.send('❌ Groq API hatası.');
+      message.channel.send('❌ Groq API error.');
     }
   } else if (content === '!boykisser') {
     const boykisserPrompt = `
-Boykisser internet memesini temel alan absürt ve komik bir sahne oluştur. 
-Sahne, pastel renklerle dolu bir arka planda geçiyor. Ortada büyük gözlü, sevimli ama tuhaf bir karakter var; 
-üzerinde "BOYKISSER" yazan neon bir tişört giymiş. Karakter dans ederken etrafında kalpler, yıldızlar ve garip emojiler uçuşuyor. 
-Sahne hem sevimli hem de rahatsız edici bir estetik taşımalı. Görsel, internet kültürünü ve ironik mizahı yansıtmalı.
+Create an absurd and hilarious scene based on the 
+Boykisser web meme. The scene takes place against a background full of pastel colors.
+ There is a cute but strange character with big eyes; He is wearing a neon t-shirt with the word 
+ "BOYKISSER" written on it. As the character dances, hearts, stars, and strange emojis fly around him. The scene should have an aesthetic that is both cute and disturbing. The image should reflect internet culture and ironic humor.
     `;
     try {
       const reply = await sendToGroq(boykisserPrompt);
       message.channel.send(`🎭 ${reply}`);
     } catch {
-      message.channel.send('❌ Boykisser prompt hatası.');
+      message.channel.send('❌ Boykisser prompt error.');
     }
   }
 });
 
-sifreKontrol();
+passwordcontrol();
